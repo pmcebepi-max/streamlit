@@ -4,16 +4,21 @@ from fpdf import FPDF
 import io
 
 # ============================================================
-# Configurações e carregamento de dados
+# Função para carregar dados do CSV
 # ============================================================
-SHEET_URL = (
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvhc1E8BOJfuULhmzvzcxtG9PkYD2KQfpfFIYWSTUN4Jl1eJJlXg1Nmy1zBkeLbePQaKz7-jKwWwZn"
-    "/pub?gid=1995854408&single=true&output=csv"
-)
+def carregar_dados():
+    SHEET_URL = (
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvhc1E8BOJfuULhmzvzcxtG9PkYD2KQfpfFIYWSTUN4Jl1eJJlXg1Nmy1zBkeLbePQaKz7-jKwWwZn"
+        "/pub?gid=1995854408&single=true&output=csv"
+    )
+    df = pd.read_csv(SHEET_URL)
+    df = df.drop(columns=["Carimbo de data/hora"])
+    return df
 
-# Carrega dados do CSV
-df = pd.read_csv(SHEET_URL)
-df = df.drop(columns=["Carimbo de data/hora"])
+# ============================================================
+# Carrega os dados sempre que a página é carregada
+# ============================================================
+df = carregar_dados()
 
 # ============================================================
 # Interface do Streamlit
@@ -36,35 +41,33 @@ st.write(f"{len(df_filtrado)} registros encontrados")
 st.dataframe(df_filtrado)
 
 # ============================================================
-# Funções de utilidade
+# Função para gerar PDF
 # ============================================================
 def gerar_pdf(df, polo, data):
     pdf = FPDF(orientation='L', unit='mm', format='A4')
     pdf.set_auto_page_break(auto=True, margin=10)
     pdf.add_page()
     
-    # Configurações iniciais
     pdf.set_font("Arial", "", 8)
     margem = 10
     page_width = pdf.w - 2 * margem
-    assinatura_width = 80  # largura fixa da coluna de assinatura
+    assinatura_width = 80
     colunas = df.columns.tolist() + ["Assinatura"]
     
-    # Calcula largura de cada coluna com base nos dados
+    # Largura das colunas
     col_widths = []
     for col in df.columns:
         max_text = max([str(col)] + [str(val) for val in df[col]], key=lambda x: pdf.get_string_width(x))
-        width = pdf.get_string_width(max_text) + 6  # padding
+        width = pdf.get_string_width(max_text) + 6
         col_widths.append(width)
     col_widths.append(assinatura_width)
     
-    # Ajusta larguras proporcionalmente se ultrapassar a página
     total_width = sum(col_widths)
     if total_width > page_width:
         scale_factor = (page_width - assinatura_width) / (total_width - assinatura_width)
         col_widths[:-1] = [w * scale_factor for w in col_widths[:-1]]
     
-    # Função para escrever cabeçalho
+    # Cabeçalho da tabela
     def escrever_cabecalho():
         pdf.set_font("Arial", "B", 8)
         for i, col in enumerate(colunas):
@@ -80,21 +83,20 @@ def gerar_pdf(df, polo, data):
     # Conteúdo da tabela
     pdf.set_font("Arial", "", 8)
     for _, row in df.iterrows():
-        if pdf.get_y() > 180:  # evita ultrapassar o rodapé
+        if pdf.get_y() > 180:
             pdf.add_page()
             escrever_cabecalho()
         for i, col in enumerate(df.columns):
             pdf.cell(col_widths[i], 8, str(row[col]), border=1)
-        pdf.cell(col_widths[-1], 8, " " * 25, border=1)  # coluna de assinatura
+        pdf.cell(col_widths[-1], 8, " " * 25, border=1)
         pdf.ln()
     
-    # Retorna PDF em bytes
     pdf_buffer = io.BytesIO()
     pdf.output(pdf_buffer)
     return pdf_buffer.getvalue()
 
 # ============================================================
-# Botão de ação
+# Botão para gerar PDF
 # ============================================================
 if st.button("Gerar PDF"):
     pdf_bytes = gerar_pdf(df_filtrado, polo_selecionado, data_selecionada)
