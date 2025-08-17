@@ -27,36 +27,34 @@ def gerar_pdf(df, polo, data):
     pdf.set_auto_page_break(auto=True, margin=10)
     pdf.add_page()
 
-    # Configurações básicas
     pdf.set_font("Arial", "", 8)
-    page_width = pdf.w - 20  # 10mm de margem em cada lado
+    page_width = pdf.w - 20  # margem 10mm cada lado
     
-    # Colunas + Assinatura
     colunas = df.columns.tolist()
-    colunas.append("Assinatura")
-    
-    # Calcula a largura de cada coluna com base no conteúdo
-    max_text_lengths = []
+    assinatura_col = "Assinatura"
+    colunas.append(assinatura_col)
+
+    # Calcula a largura de cada coluna
+    col_widths = []
     for col in colunas:
-        max_len = pdf.get_string_width(str(col))  # largura do cabeçalho
-        if col != "Assinatura":
-            for val in df[col]:
-                max_len = max(max_len, pdf.get_string_width(str(val)))
+        if col == assinatura_col:
+            max_text = " " * 25  # espaço para assinatura
         else:
-            max_len = pdf.get_string_width(" " * 25)  # espaço para assinatura
-        max_text_lengths.append(max_len + 4)  # adiciona padding
+            max_text = max([str(val) for val in df[col]] + [col], key=lambda x: len(str(x)))
+        width = pdf.get_string_width(str(max_text)) + 6  # padding
+        col_widths.append(width)
     
     # Ajusta proporcionalmente para caber na página
-    total_width = sum(max_text_lengths)
+    total_width = sum(col_widths)
     if total_width > page_width:
         ratio = page_width / total_width
-        max_text_lengths = [w * ratio for w in max_text_lengths]
-    
+        col_widths = [w * ratio for w in col_widths]
+
     # Função para escrever cabeçalho
     def escrever_cabecalho():
         pdf.set_font("Arial", "B", 10)
         for i, col in enumerate(colunas):
-            pdf.cell(max_text_lengths[i], 8, col, border=1, align='C')
+            pdf.cell(col_widths[i], 8, col, border=1, align='C')
         pdf.ln()
     
     # Cabeçalho principal
@@ -68,19 +66,19 @@ def gerar_pdf(df, polo, data):
     # Conteúdo
     pdf.set_font("Arial", "", 8)
     for idx, row in df.iterrows():
-        if pdf.get_y() > 180:
+        if pdf.get_y() > 180:  # altura máxima antes do rodapé
             pdf.add_page()
             escrever_cabecalho()
-        
         for i, col in enumerate(df.columns):
-            pdf.cell(max_text_lengths[i], 8, str(row[col]), border=1)
-        pdf.cell(max_text_lengths[-1], 8, " " * 25, border=1)  # assinatura
+            pdf.cell(col_widths[i], 8, str(row[col]), border=1)
+        pdf.cell(col_widths[-1], 8, " " * 25, border=1)  # assinatura
         pdf.ln()
     
     pdf_buffer = io.BytesIO()
     pdf.output(pdf_buffer)
     pdf_bytes = pdf_buffer.getvalue()
     return pdf_bytes
+    
 # --- Botão para gerar PDF ---
 if st.button("Gerar PDF"):
     pdf_bytes = gerar_pdf(df_filtrado, polo_selecionado, data_selecionada)
