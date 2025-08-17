@@ -23,28 +23,38 @@ st.dataframe(df_filtrado)
 
 # --- Função para gerar PDF ---
 def gerar_pdf(df, polo, data):
-    pdf = FPDF(orientation='L', unit='mm', format='A4')  # paisagem
+    pdf = FPDF(orientation='L', unit='mm', format='A4')
+    pdf.set_auto_page_break(auto=True, margin=10)  # permite quebra de página automática
     pdf.add_page()
     
-    pdf.set_font("Arial", "B", 14)  # título
+    # Função para escrever o cabeçalho da tabela
+    def escrever_cabecalho():
+        pdf.set_font("Arial", "B", 10)
+        colunas = df.columns.tolist()
+        col_width = pdf.w / (len(colunas)+1)  # +1 para assinatura
+        for col in colunas:
+            pdf.cell(col_width, 8, col, border=1, align='C')
+        pdf.cell(col_width, 8, "Assinatura", border=1, align='C')
+        pdf.ln()
+        return col_width
+    
+    # Cabeçalho da tabela
+    pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 10, f"Lista de Presença - {polo} - {data}", ln=True, align="C")
     pdf.ln(5)
+    col_width = escrever_cabecalho()
     
-    pdf.set_font("Arial", "", 10)  # fonte menor para tabela
-    colunas = df.columns.tolist()
-    col_width = pdf.w / (len(colunas)+1)  # +1 para assinatura
+    pdf.set_font("Arial", "", 8)
     
-    # Cabeçalho
-    for col in colunas:
-        pdf.cell(col_width, 8, col, border=1)
-    pdf.cell(col_width, 8, "Assinatura", border=1)
-    pdf.ln()
-    
-    # Linhas
-    for _, row in df.iterrows():
+    for idx, row in df.iterrows():
+        # Quebra de página se necessário
+        if pdf.get_y() > 180:  # altura máxima antes do rodapé
+            pdf.add_page()
+            col_width = escrever_cabecalho()
+        
         for item in row:
             pdf.cell(col_width, 8, str(item), border=1)
-        pdf.cell(col_width, 8, " " * 20, border=1)
+        pdf.cell(col_width, 8, " " * 25, border=1)  # espaço maior para assinatura
         pdf.ln()
     
     pdf_buffer = io.BytesIO()
