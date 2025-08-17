@@ -25,26 +25,27 @@ st.dataframe(df_filtrado)
 def gerar_pdf(df, polo, data):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
+    pdf.set_font("Arial", "B", 14)  # título um pouco menor
     pdf.cell(0, 10, f"Lista de Presença - {polo} - {data}", ln=True, align="C")
-    pdf.ln(10)
+    pdf.ln(5)
     
-    pdf.set_font("Arial", "", 12)
+    pdf.set_font("Arial", "", 10)  # fonte menor para tabela
     colunas = df.columns.tolist()
     col_width = pdf.w / (len(colunas)+1)
     
+    # Cabeçalho
     for col in colunas:
-        pdf.cell(col_width, 10, col, border=1)
-    pdf.cell(col_width, 10, "Assinatura", border=1)
+        pdf.cell(col_width, 8, col, border=1)
+    pdf.cell(col_width, 8, "Assinatura", border=1)
     pdf.ln()
     
+    # Linhas
     for _, row in df.iterrows():
         for item in row:
-            pdf.cell(col_width, 10, str(item), border=1)
-        pdf.cell(col_width, 10, " " * 20, border=1)
+            pdf.cell(col_width, 8, str(item), border=1)
+        pdf.cell(col_width, 8, " " * 20, border=1)
         pdf.ln()
     
-    # Salvar PDF em bytes
     pdf_buffer = io.BytesIO()
     pdf.output(pdf_buffer)
     pdf_bytes = pdf_buffer.getvalue()
