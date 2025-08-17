@@ -1,28 +1,23 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
+import io
 
 # --- Link CSV público ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvhc1E8BOJfuULhmzvzcxtG9PkYD2KQfpfFIYWSTUN4Jl1eJJlXg1Nmy1zBkeLbePQaKz7-jKwWwZn/pub?gid=1995854408&single=true&output=csv"
 
-# --- Carregar dados ---
 df = pd.read_csv(SHEET_URL)
-
-# Remover coluna Carimbo de data/hora
 df = df.drop(columns=["Carimbo de data/hora"])
 
 st.title("Lista de Presença com Assinatura")
 
-# --- Filtros ---
 data_unica = df["Data"].unique()
 polo_unico = df["Polo de Instrução"].unique()
 
 data_selecionada = st.selectbox("Selecione a Data", sorted(data_unica))
 polo_selecionado = st.selectbox("Selecione o Polo de Instrução", sorted(polo_unico))
 
-# Filtrar dataframe
 df_filtrado = df[(df["Data"] == data_selecionada) & (df["Polo de Instrução"] == polo_selecionado)]
-
 st.write(f"{len(df_filtrado)} registros encontrados")
 st.dataframe(df_filtrado)
 
@@ -35,25 +30,24 @@ def gerar_pdf(df, polo, data):
     pdf.ln(10)
     
     pdf.set_font("Arial", "", 12)
-    
     colunas = df.columns.tolist()
     col_width = pdf.w / (len(colunas)+1)
     
-    # Cabeçalho
     for col in colunas:
         pdf.cell(col_width, 10, col, border=1)
     pdf.cell(col_width, 10, "Assinatura", border=1)
     pdf.ln()
     
-    # Linhas
     for _, row in df.iterrows():
         for item in row:
             pdf.cell(col_width, 10, str(item), border=1)
         pdf.cell(col_width, 10, " " * 20, border=1)
         pdf.ln()
     
-    # Gerar bytes corretamente
-    pdf_bytes = pdf.output(dest='S').encode('latin1') if isinstance(pdf.output(dest='S'), str) else pdf.output(dest='S')
+    # Salvar PDF em bytes
+    pdf_buffer = io.BytesIO()
+    pdf.output(pdf_buffer)
+    pdf_bytes = pdf_buffer.getvalue()
     return pdf_bytes
 
 # --- Botão para gerar PDF ---
