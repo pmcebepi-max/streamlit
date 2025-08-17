@@ -31,7 +31,7 @@ def gerar_pdf(df, polo, data):
     pdf.set_font("Arial", "", 8)
     margem = 10  # margem de cada lado
     page_width = pdf.w - 2 * margem
-    assinatura_width = 120  # largura fixa da coluna de assinatura em mm
+    assinatura_width =  80  # largura fixa da coluna de assinatura em mm
 
     colunas = df.columns.tolist()
     colunas.append("Assinatura")  # adiciona coluna de assinatura
