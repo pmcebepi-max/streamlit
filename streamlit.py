@@ -1,21 +1,14 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
-import gspread
 
-# --- URL da planilha compartilhada ---
-SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1hW17V_blimDdum1A2OotpHlBJz_9fkJJH1jIoT-2J68/edit?usp=sharing"
+# --- Link CSV público ---
+SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvhc1E8BOJfuULhmzvzcxtG9PkYD2KQfpfFIYWSTUN4Jl1eJJlXg1Nmy1zBkeLbePQaKz7-jKwWwZn/pub?gid=1995854408&single=true&output=csv"
 
-# --- Conectar à planilha pública ---
-gc = gspread.public()
-sh = gc.open_by_url(SPREADSHEET_URL)
-worksheet = sh.sheet1
+# --- Carregar dados ---
+df = pd.read_csv(SHEET_URL)
 
-# --- Pegar todos os dados ---
-data = worksheet.get_all_records()
-df = pd.DataFrame(data)
-
-# Remover coluna de Carimbo de data/hora
+# Remover coluna Carimbo de data/hora
 df = df.drop(columns=["Carimbo de data/hora"])
 
 st.title("Lista de Presença com Assinatura")
