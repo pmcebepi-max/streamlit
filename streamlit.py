@@ -25,11 +25,11 @@ st.dataframe(df_filtrado)
 def gerar_pdf(df, polo, data):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", "B", 14)  # título um pouco menor
+    pdf.set_font("Arial", "B", 12)  # título um pouco menor
     pdf.cell(0, 10, f"Lista de Presença - {polo} - {data}", ln=True, align="C")
     pdf.ln(5)
     
-    pdf.set_font("Arial", "", 10)  # fonte menor para tabela
+    pdf.set_font("Arial", "", 8)  # fonte menor para tabela
     colunas = df.columns.tolist()
     col_width = pdf.w / (len(colunas)+1)
     
