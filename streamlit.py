@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 import io
+from datetime import datetime
 
 # ============================================================
 # Função para carregar dados do CSV
@@ -19,6 +20,9 @@ def carregar_dados():
 # Carrega os dados sempre que a página é carregada
 # ============================================================
 df = carregar_dados()
+
+# Mostra aviso de atualização
+st.info(f"Dados atualizados em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
 
 # ============================================================
 # Interface do Streamlit
@@ -54,7 +58,6 @@ def gerar_pdf(df, polo, data):
     assinatura_width = 80
     colunas = df.columns.tolist() + ["Assinatura"]
     
-    # Largura das colunas
     col_widths = []
     for col in df.columns:
         max_text = max([str(col)] + [str(val) for val in df[col]], key=lambda x: pdf.get_string_width(x))
@@ -67,20 +70,17 @@ def gerar_pdf(df, polo, data):
         scale_factor = (page_width - assinatura_width) / (total_width - assinatura_width)
         col_widths[:-1] = [w * scale_factor for w in col_widths[:-1]]
     
-    # Cabeçalho da tabela
     def escrever_cabecalho():
         pdf.set_font("Arial", "B", 8)
         for i, col in enumerate(colunas):
             pdf.cell(col_widths[i], 8, col, border=1, align='C')
         pdf.ln()
     
-    # Cabeçalho do documento
     pdf.set_font("Arial", "B", 8)
     pdf.cell(0, 10, f"Lista de Presença - {polo} - {data}", ln=True, align="C")
     pdf.ln(5)
     escrever_cabecalho()
     
-    # Conteúdo da tabela
     pdf.set_font("Arial", "", 8)
     for _, row in df.iterrows():
         if pdf.get_y() > 180:
