@@ -24,37 +24,40 @@ st.dataframe(df_filtrado)
 # --- Função para gerar PDF ---
 def gerar_pdf(df, polo, data):
     pdf = FPDF(orientation='L', unit='mm', format='A4')
-    pdf.set_auto_page_break(auto=True, margin=10)  # permite quebra de página automática
+    pdf.set_auto_page_break(auto=True, margin=10)
     pdf.add_page()
     
-    # Função para escrever o cabeçalho da tabela
-    def escrever_cabecalho():
-        pdf.set_font("Arial", "B", 10)
-        colunas = df.columns.tolist()
-        col_width = pdf.w / (len(colunas)+1)  # +1 para assinatura
-        for col in colunas:
-            pdf.cell(col_width, 8, col, border=1, align='C')
-        pdf.cell(col_width, 8, "Assinatura", border=1, align='C')
-        pdf.ln()
-        return col_width
-    
-    # Cabeçalho da tabela
+    # Título
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 10, f"Lista de Presença - {polo} - {data}", ln=True, align="C")
     pdf.ln(5)
-    col_width = escrever_cabecalho()
+    
+    # Colunas
+    colunas = df.columns.tolist()
+    largura_total = pdf.w - 20  # largura da página menos margens
+    largura_assinatura = 50     # coluna assinatura maior
+    largura_outras = (largura_total - largura_assinatura) / len(colunas)
+    
+    # Função para escrever cabeçalho
+    def escrever_cabecalho():
+        pdf.set_font("Arial", "B", 10)
+        for col in colunas:
+            pdf.cell(largura_outras, 8, col, border=1, align='C')
+        pdf.cell(largura_assinatura, 8, "Assinatura", border=1, align='C')
+        pdf.ln()
+    
+    escrever_cabecalho()
     
     pdf.set_font("Arial", "", 8)
     
     for idx, row in df.iterrows():
-        # Quebra de página se necessário
-        if pdf.get_y() > 180:  # altura máxima antes do rodapé
+        if pdf.get_y() > 180:  # quebra de página
             pdf.add_page()
-            col_width = escrever_cabecalho()
+            escrever_cabecalho()
         
         for item in row:
-            pdf.cell(col_width, 8, str(item), border=1)
-        pdf.cell(col_width, 8, " " * 25, border=1)  # espaço maior para assinatura
+            pdf.cell(largura_outras, 8, str(item), border=1)
+        pdf.cell(largura_assinatura, 8, " " * 25, border=1)  # espaço para assinatura
         pdf.ln()
     
     pdf_buffer = io.BytesIO()
