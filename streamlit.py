@@ -36,9 +36,10 @@ def gerar_pdf(df, polo, data):
     
     pdf.set_font("Arial", "", 12)
     
-    # Cabeçalho
     colunas = df.columns.tolist()
-    col_width = pdf.w / (len(colunas)+1)  # adiciona coluna extra para assinatura
+    col_width = pdf.w / (len(colunas)+1)
+    
+    # Cabeçalho
     for col in colunas:
         pdf.cell(col_width, 10, col, border=1)
     pdf.cell(col_width, 10, "Assinatura", border=1)
@@ -48,10 +49,12 @@ def gerar_pdf(df, polo, data):
     for _, row in df.iterrows():
         for item in row:
             pdf.cell(col_width, 10, str(item), border=1)
-        pdf.cell(col_width, 10, " " * 20, border=1)  # espaço para assinatura
+        pdf.cell(col_width, 10, " " * 20, border=1)
         pdf.ln()
     
-    return pdf.output(dest="S").encode("latin1")
+    # Gerar bytes corretamente
+    pdf_bytes = pdf.output(dest='S').encode('latin1') if isinstance(pdf.output(dest='S'), str) else pdf.output(dest='S')
+    return pdf_bytes
 
 # --- Botão para gerar PDF ---
 if st.button("Gerar PDF"):
