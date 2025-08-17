@@ -1,14 +1,21 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
+import gspread
 
-# --- URL da planilha pública publicada como CSV ---
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1hW17V_blimDdum1A2OotpHlBJz_9fkJJH1jIoT-2J68/edit?usp=sharing"
+# --- URL da planilha compartilhada ---
+SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1hW17V_blimDdum1A2OotpHlBJz_9fkJJH1jIoT-2J68/edit?usp=sharing"
 
-# --- Carregar dados ---
-df = pd.read_csv(SHEET_URL)
+# --- Conectar à planilha pública ---
+gc = gspread.public()
+sh = gc.open_by_url(SPREADSHEET_URL)
+worksheet = sh.sheet1
 
-# Remover coluna de carimbo de data/hora
+# --- Pegar todos os dados ---
+data = worksheet.get_all_records()
+df = pd.DataFrame(data)
+
+# Remover coluna de Carimbo de data/hora
 df = df.drop(columns=["Carimbo de data/hora"])
 
 st.title("Lista de Presença com Assinatura")
@@ -38,16 +45,17 @@ def gerar_pdf(df, polo, data):
     
     # Cabeçalho
     colunas = df.columns.tolist()
-    col_width = pdf.w / len(colunas) - 10  # largura proporcional
+    col_width = pdf.w / (len(colunas)+1)  # adiciona coluna extra para assinatura
     for col in colunas:
         pdf.cell(col_width, 10, col, border=1)
+    pdf.cell(col_width, 10, "Assinatura", border=1)
     pdf.ln()
     
-    # Linhas com espaço para assinatura
+    # Linhas
     for _, row in df.iterrows():
         for item in row:
             pdf.cell(col_width, 10, str(item), border=1)
-        pdf.cell(col_width, 10, "__________________", border=1)  # espaço para assinatura
+        pdf.cell(col_width, 10, " " * 20, border=1)  # espaço para assinatura
         pdf.ln()
     
     return pdf.output(dest="S").encode("latin1")
