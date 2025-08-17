@@ -3,7 +3,7 @@ import pandas as pd
 from fpdf import FPDF
 
 # --- URL da planilha pública publicada como CSV ---
-SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1v.../pub?output=csv"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1hW17V_blimDdum1A2OotpHlBJz_9fkJJH1jIoT-2J68/edit?usp=sharing"
 
 # --- Carregar dados ---
 df = pd.read_csv(SHEET_URL)
