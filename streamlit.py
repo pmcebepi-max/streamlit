@@ -53,13 +53,13 @@ def gerar_pdf(df, polo, data):
 
     # Função para escrever cabeçalho
     def escrever_cabecalho():
-        pdf.set_font("Arial", "B", 10)
+        pdf.set_font("Arial", "B", 8)
         for i, col in enumerate(colunas):
             pdf.cell(col_widths[i], 8, col, border=1, align='C')
         pdf.ln()
 
     # Cabeçalho do documento
-    pdf.set_font("Arial", "B", 10)
+    pdf.set_font("Arial", "B", 8)
     pdf.cell(0, 10, f"Lista de Presença - {polo} - {data}", ln=True, align="C")
     pdf.ln(5)
     escrever_cabecalho()
